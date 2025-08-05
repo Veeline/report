@@ -67,7 +67,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-if st.button("Report"):
+if st.button("Refresh"):
     scan="http://52.140.78.30:10108/VILUAT_29378/ODataV4/Company('Veeline%20Industries%20Limited')/FinalStageScanning?$filter=Date eq {}" .format(current_date)
     dpr="http://52.140.78.30:10108/VILUAT_29378/ODataV4/Company('Veeline%20Industries%20Limited')/ItemLedgerEntires?$filter=Posting_Date ge {}" .format(current_date)
 
@@ -105,7 +105,7 @@ if st.button("Report"):
 
     result.rename(columns={"Line_No":"Scan","Quantity":"DPR"},inplace=True)
 
-    # Step 1: Melt the DataFrame to long format
+    # Melt the DataFrame to long format
     df_melted = result.melt(
         id_vars=["Branch", "Division", "Date"],
         value_vars=["Scan", "DPR"],
@@ -113,7 +113,7 @@ if st.button("Report"):
         value_name="Value"
     )
 
-    # Step 2: Pivot to reshape with Line_No and Quantity side-by-side for each Date
+    # Pivot to reshape with Line_No and Quantity side-by-side for each Date
     pivot = df_melted.pivot_table(
         index=["Branch", "Division"],
         columns=["Date", "Metric"],
@@ -122,10 +122,10 @@ if st.button("Report"):
         fill_value=0
     )
 
-    # Step 3: Flatten the multi-level column index (optional but cleaner)
+    # Flatten the multi-level column index (optional but cleaner)
     pivot.columns = [f"{date} {metric}" for date, metric in pivot.columns]
 
-    # Reset index if needed
+
     pivot = pivot.reset_index()
     st.write(pivot)
     
