@@ -11,7 +11,7 @@ def get_base64_image(imagePath):
         data=f.read()
     return base64.b64encode(data).decode()
 
-img_data = get_base64_image("C:/Users/Admin/Downloads/5583046.jpg")
+img_data = get_base64_image("5583046.jpg")
 
 
 st.markdown(
