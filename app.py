@@ -73,18 +73,20 @@ st.markdown("""
 
 
 scan="http://52.140.78.30:10108/VILUAT_29378/ODataV4/Company('Veeline%20Industries%20Limited')/FinalStageScanning?$filter=Date eq {}" .format(current_date)
-dpr="http://52.140.78.30:10108/VILUAT_29378/ODataV4/Company('Veeline%20Industries%20Limited')/ItemLedgerEntires?$filter=Posting_Date ge {}" .format(current_date)
+#dpr="http://52.140.78.30:10108/VILUAT_29378/ODataV4/Company('Veeline%20Industries%20Limited')/ItemLedgerEntires?$filter=Posting_Date eq {}" .format(current_date)
 resp1 = requests.get(scan,auth=HTTPBasicAuth(uid,pwd))
-resp2 = requests.get(dpr,auth=HTTPBasicAuth(uid,pwd))
+#resp2 = requests.get(dpr,auth=HTTPBasicAuth(uid,pwd))
 
 def report(branch):
+    scan="http://52.140.78.30:10108/VILUAT_29378/ODataV4/Company('Veeline%20Industries%20Limited')/FinalStageScanning?$filter=Date eq {}" .format(current_date)
+    dpr="http://52.140.78.30:10108/VILUAT_29378/ODataV4/Company('Veeline%20Industries%20Limited')/ItemLedgerEntires?$filter=Posting_Date eq {}" .format(current_date)
     resp1 = requests.get(scan,auth=HTTPBasicAuth(uid,pwd))
     resp2 = requests.get(dpr,auth=HTTPBasicAuth(uid,pwd))
     data = resp1.json()["value"]
     data2 = resp2.json()["value"]
     scandf=pd.DataFrame(data)
     dprdf=pd.DataFrame(data2)
-    if branch:
+    if branch and not scandf.empty and not dprdf.empty:
         scandf = scandf[scandf["Branch"] == branch][["Line_No","Date","Branch","Division"]]
         dprdf=dprdf[(dprdf["Entry_Type"].str.startswith("Output")) & (dprdf["Source_No"].str.startswith("FG")) & (dprdf["Global_Dimension_1_Code"]==branch)][["Posting_Date","Global_Dimension_1_Code","Global_Dimension_2_Code","Quantity"]]
         dprdf["key"]=dprdf["Posting_Date"].astype(str)+"/"+dprdf["Global_Dimension_1_Code"]+"/"+dprdf["Global_Dimension_2_Code"]
@@ -118,7 +120,12 @@ def report(branch):
         pivot.columns = [f"{date} {metric}" for date, metric in pivot.columns]
         pivot = pivot.reset_index()
         st.write(pivot)
-    else:
+        st.write(
+             "Scanning table: ",scandf.shape , "DPR table: ",dprdf.shape
+         )
+
+      
+    elif branch==None and not scandf.empty and not dprdf.empty :
         scandf = scandf[["Line_No","Date","Branch","Division"]]
         dprdf=dprdf[(dprdf["Entry_Type"].str.startswith("Output")) & (dprdf["Source_No"].str.startswith("FG"))][["Posting_Date","Global_Dimension_1_Code","Global_Dimension_2_Code","Quantity"]]
         dprdf["key"]=dprdf["Posting_Date"].astype(str)+"/"+dprdf["Global_Dimension_1_Code"]+"/"+dprdf["Global_Dimension_2_Code"]
@@ -152,64 +159,31 @@ def report(branch):
         pivot.columns = [f"{date} {metric}" for date, metric in pivot.columns]
         pivot = pivot.reset_index()
         st.write(pivot)
-
-if resp1.status_code==200 and resp2.status_code==200: 
-    st.write("Online")
-    if pd.DataFrame(resp1).shape[0]!=0:
-        access=st.text_input("Enter the access password",type="password")
-        if access==mpwd:
-            if st.button("Refresh"):
-                report(branch=None)
-        elif access==sik:
-            if st.button("Refresh"):
-                report(branch="SIK")
-        elif access==sur:
-            if st.button("Refresh"):
-                report(branch="SUR")
-        elif access==nal:
-            if st.button("Refresh"):
-                report(branch="NAL")
-        else:
-            st.write("Enter a valid passkey")
-              
+        st.write(
+             "Scanning table: ",scandf.shape , "DPR table: ",dprdf.shape
+         )
     else:
-        st.write("No Scanning Data is available for Current Date")
+         st.write( "Unavailability of data Scanning table: ",scandf.shape , "DPR table: ",dprdf.shape
+         )
+
+if resp1.status_code==200 : 
+    st.write("Online")
+    access=st.text_input("Enter the access password",type="password")
+    if access==mpwd:
+        if st.button("Refresh"):
+            report(branch=None)
+    elif access==sik:
+        if st.button("Refresh"):
+            report(branch="SIK")
+    elif access==sur:
+        if st.button("Refresh"):
+            report(branch="SUR")
+    elif access==nal:
+        if st.button("Refresh"):
+            report(branch="NAL")
+    else:
+        st.write("Enter a valid passkey")
+                    
 else:
     st.write("DataBase authentication error:")    
          
-                 
-
-         
-
-
-
-
-
-
-
-
-         
-         
-         
-         
-    
-         
-
-
-
-
-
-     
-
-            
-
-            
-            
-                    
-
-                    
-
-                   
-                    
-
-                    
